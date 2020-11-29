@@ -54,7 +54,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseUser fireUser;
     private CollectionReference mMsgsReference;
 
-    private DocumentReference mDocRef = FirebaseFirestore.getInstance().collection("sampleData").document("Locais");
+    private FirebaseFirestore  db = FirebaseFirestore.getInstance();
+    private DocumentReference mDocRef = db.collection("Testes").document();
+    private Local local;
+
     private Button adicionarLocais;
 
     @Override
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         cardsLocaisRecyclerView = findViewById(R.id.cardsLocaisRecycleView);
         locais = new ArrayList<>();
         adapter = new LocalAdapter(locais, this);
+        local = (Local) getIntent().getSerializableExtra("local");
 
         adapter.setOnItemClickListener(new LocalAdapter.ClickListener() {
             @Override
@@ -74,30 +78,29 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemLongClick(int position, View v) {
                 Log.d("RESULTADO", "onItemLongClick pos = " + position);
+                showDeleteDialog();
             }
         });
+
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(false);
         cardsLocaisRecyclerView.setLayoutManager(linearLayoutManager);
         cardsLocaisRecyclerView.setAdapter(adapter);
 
-
-        adicionarLocais = findViewById(R.id.buttonAdicionarLocais);
+        adicionarLocais = (Button) findViewById(R.id.buttonAdicionarLocais);
         adicionarLocais.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, CadastroDeLocaisActivity.class);
                 startActivity(intent);
             }
-
         });
-
     }
 
 
     private void setupFirebase (){
         fireUser= FirebaseAuth.getInstance().getCurrentUser();
-        mMsgsReference =FirebaseFirestore.getInstance ().collection("NewLocais");
+        mMsgsReference =FirebaseFirestore.getInstance ().collection("Testes");
         getRemoteMsgs();
     }
 
@@ -109,44 +112,52 @@ public class MainActivity extends AppCompatActivity {
 
     private void getRemoteMsgs (){
         mMsgsReference.addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent( @Nullable
-                                        QuerySnapshot queryDocumentSnapshots,
-                                          @Nullable
-                                                 FirebaseFirestoreException e) {
-                        locais.clear();
-                        for(DocumentSnapshot doc:queryDocumentSnapshots.getDocuments()){
-                            Local local = doc.toObject(Local.class);
-                            locais .add(local);
-                        }
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-    }
-
-
-    private void dataToDelete(){
-
-        mDocRef.delete().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if(task.isSuccessful()){
-                    Toast.makeText(MainActivity.this, R.string.deleted, Toast.LENGTH_SHORT).show();
+            public void onEvent( @Nullable
+                                         QuerySnapshot queryDocumentSnapshots,
+                                 @Nullable
+                                         FirebaseFirestoreException e) {
+                locais.clear();
+                for(DocumentSnapshot doc:queryDocumentSnapshots.getDocuments()){
+                    Local local = doc.toObject(Local.class);
+                    locais .add(local);
                 }
-                else Toast.makeText(MainActivity.this, R.string.notDeleted, Toast.LENGTH_SHORT).show();
+                adapter.notifyDataSetChanged();
             }
         });
     }
 
-    // Pode apagar ? Pq o metodo esta transparente ou seja não esta sendo utilizado...
-    private void showDeleteDialog(String name){
+
+    private void localDelete(){
+        String local_id = "h1hqyRuwPRPmskEot5NT";
+        String id = db.collection("Testes").document(local_id).getId();
+
+        db.collection("Testes")
+                .document(id)
+                .delete();
+
+//        db.collection("Testes")
+//                .document(id)
+//                .delete()
+//                .addOnCompleteListener(new OnCompleteListener<Void>() {
+//            @Override
+//            public void onComplete(@NonNull Task<Void> task) {
+//                if(task.isSuccessful()){
+//                    Toast.makeText(MainActivity.this, R.string.deleted, Toast.LENGTH_SHORT).show();
+//                }
+//                else Toast.makeText(MainActivity.this, R.string.notDeleted, Toast.LENGTH_SHORT).show();
+//            }
+//        });
+    }
+
+    private void showDeleteDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.delete);
         builder.setMessage(R.string.delete_dialog);
         builder.setPositiveButton(R.string.positive, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dataToDelete();
+                localDelete();
             }
         });
         builder.setNegativeButton(R.string.negative, new DialogInterface.OnClickListener() {
@@ -156,10 +167,8 @@ public class MainActivity extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
-
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
-
     }
 
 

@@ -63,7 +63,6 @@ public class CadastroDeLocaisActivity extends AppCompatActivity {
 
     private static final String TAG = "MyActivity";
 
-    FirebaseFirestore  firebaseFirestore = FirebaseFirestore.getInstance();
     private LocationManager locationManager;
     private LocationListener locationListener;
     private static final int GPS_REQUEST_PERMISSION_CODE = 1001;
@@ -144,6 +143,9 @@ public class CadastroDeLocaisActivity extends AppCompatActivity {
     }
 
     public void completarCadastro( View view) {
+        FirebaseFirestore  db = FirebaseFirestore.getInstance();
+        DocumentReference mDocRef = db.collection("Testes").document();
+
         if(validarCampos()) {
             String tituloText = editTextTitulo.getText().toString();
             String ruaText = editTextRua.getText().toString();
@@ -156,7 +158,7 @@ public class CadastroDeLocaisActivity extends AppCompatActivity {
 
             Date data = new Date();
 
-             Local localSave = new Local();
+            Local localSave = new Local();
 
             localSave.setTitulo(tituloText);
             localSave.setRua(ruaText);
@@ -167,12 +169,13 @@ public class CadastroDeLocaisActivity extends AppCompatActivity {
             localSave.setDadosLatitude(latitudeText);
             localSave.setDadosLongitude(longitudeText);
             localSave.setDataCadastro(data);
-            firebaseFirestore.collection("NewLocais")
+            db.collection("Testes")
                     .add(localSave)
                     .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                         @Override
-                        public void onSuccess(DocumentReference documentReference) {
-                            Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                        public void onSuccess(DocumentReference mDocRef) {
+                            Log.d(TAG, "DocumentSnapshot added with ID: " + mDocRef.getId());
+
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {

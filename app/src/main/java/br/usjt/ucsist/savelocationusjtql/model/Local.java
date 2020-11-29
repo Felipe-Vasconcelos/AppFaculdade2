@@ -28,7 +28,6 @@ public class Local {
         this.dataCadastro = dataCadastro;
     }
 
-
     public String getDadosLongitude() {
         return dadosLongitude;
     }
